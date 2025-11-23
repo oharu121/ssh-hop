@@ -44,4 +44,3 @@ lerna-debug.log*
 .yarn/
 .pnpm-store/
 .npm/
-.github
