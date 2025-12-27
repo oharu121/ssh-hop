@@ -6,10 +6,10 @@ export interface SSHConfig {
   name: string;
   /** Hostname or IP address */
   host: string;
-  /** SSH port (typically 22) */
-  port: number;
-  /** Username for authentication */
-  username: string;
+  /** SSH port (default: 22) */
+  port?: number;
+  /** Username for authentication (can be inherited from defaults) */
+  username?: string;
   /** Password authentication (optional) */
   password?: string;
   /** Private key authentication (optional, string path or Buffer) */
@@ -19,15 +19,38 @@ export interface SSHConfig {
 }
 
 /**
+ * Default configuration values applied to all hops
+ * Individual hop configs override these defaults
+ */
+export interface SSHDefaults {
+  /** Default SSH port (default: 22) */
+  port?: number;
+  /** Default username for authentication */
+  username?: string;
+  /** Default password for authentication */
+  password?: string;
+  /** Default private key for authentication */
+  privateKey?: string | Buffer;
+  /** Default connection timeout in milliseconds (default: 60000) */
+  readyTimeout?: number;
+}
+
+/**
  * Configuration for the SSH Orchestrator
  */
 export interface OrchestratorConfig {
   /** Array of SSH hops to tunnel through (in order) */
   hops: SSHConfig[];
+  /** Default values applied to all hops (hop config overrides defaults) */
+  defaults?: SSHDefaults;
   /** Optional logger implementation (defaults to no-op) */
   logger?: LoggerInterface;
+  /** Callback fired before the connection chain starts (e.g., start Pomerium) */
+  onBeforeConnect?: () => Promise<void>;
   /** Callback fired after each hop is successfully connected */
   onHopConnected?: (hopIndex: number, config: SSHConfig) => Promise<void>;
+  /** Callback fired before disconnect (e.g., cleanup, stop Pomerium) */
+  onBeforeDisconnect?: () => Promise<void>;
 }
 
 /**

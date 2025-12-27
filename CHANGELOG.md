@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0]
+
+### Added
+- **`onBeforeConnect` hook** - Callback fired before the connection chain starts (e.g., start Pomerium tunnel)
+- **`onBeforeDisconnect` hook** - Callback fired before disconnect (e.g., cleanup, stop external services)
+- **`defaults` config** - Shared credentials applied to all hops, reducing configuration duplication
+- **`isConnected` property** - Simple boolean to check if all hops are connected
+- **`SSHDefaults` type** - New interface for default configuration values
+
+### Changed
+- **`port` is now optional** - Defaults to 22 if not specified in hop config or defaults
+- **`username` is now optional** - Can be inherited from `defaults` config
+- **Credential resolution** - Hop config overrides defaults, which override built-in defaults (port: 22, readyTimeout: 60000)
+
+### Documentation
+- Added migration example for bss-autopilot use case
+- Added v2.0 roadmap in `.dev-notes/2025-12-28.md`
+
 ## [1.0.0]
 
 ### Added
@@ -66,6 +84,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added comprehensive keywords for npm discoverability
 - Updated repository URLs to reflect new name
 - Added badges for version, license, types, downloads, CI status
-
-[Unreleased]: https://github.com/oharu121/ssh-hop/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/oharu121/ssh-hop/releases/tag/v0.1.0

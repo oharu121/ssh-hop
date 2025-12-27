@@ -11,6 +11,7 @@ export { noOpLogger } from "./utils/NoOpLogger";
 // Types
 export type {
   SSHConfig,
+  SSHDefaults,
   OrchestratorConfig,
   SimplifiedConfig,
   LoggerInterface,

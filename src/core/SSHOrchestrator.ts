@@ -9,6 +9,20 @@ import { SFTPClient } from "./SFTPClient";
 import { noOpLogger } from "../utils/NoOpLogger";
 
 /**
+ * Resolved SSH configuration with all defaults applied
+ * @internal
+ */
+interface ResolvedSSHConfig {
+  name: string;
+  host: string;
+  port: number;
+  username: string;
+  password?: string;
+  privateKey?: string | Buffer;
+  readyTimeout: number;
+}
+
+/**
  * SSH Orchestrator - Manages multi-hop SSH tunnel chains
  *
  * Supports:
@@ -17,7 +31,8 @@ import { noOpLogger } from "../utils/NoOpLogger";
  * - SFTP access to any hop in the chain
  * - Additional remote connections from any hop
  * - Automatic reconnection handling
- * - Lifecycle hooks for custom authentication
+ * - Lifecycle hooks for custom authentication (onBeforeConnect, onHopConnected, onBeforeDisconnect)
+ * - Default credentials shared across hops
  */
 export class SSHOrchestrator {
   private config: OrchestratorConfig;
@@ -25,6 +40,13 @@ export class SSHOrchestrator {
   private tunnels: Client[] = [];
   private sftpClients: Map<string, SFTPClient> = new Map();
   private remotes: Map<string, Client> = new Map();
+
+  /**
+   * Check if the orchestrator is connected to all configured hops
+   */
+  public get isConnected(): boolean {
+    return this.tunnels.length === this.config.hops.length && this.config.hops.length > 0;
+  }
 
   constructor(config: OrchestratorConfig | SimplifiedConfig) {
     // Convert SimplifiedConfig to OrchestratorConfig if needed
@@ -61,6 +83,25 @@ export class SSHOrchestrator {
   }
 
   /**
+   * Resolve hop configuration by merging defaults with hop-specific config
+   * Priority: hop config > defaults > built-in defaults
+   * @private
+   */
+  private resolveCredentials(hop: SSHConfig): ResolvedSSHConfig {
+    const defaults = this.config.defaults || {};
+
+    return {
+      name: hop.name,
+      host: hop.host,
+      port: hop.port ?? defaults.port ?? 22,
+      username: hop.username ?? defaults.username ?? "",
+      password: hop.password ?? defaults.password,
+      privateKey: hop.privateKey ?? defaults.privateKey,
+      readyTimeout: hop.readyTimeout ?? defaults.readyTimeout ?? 60000,
+    };
+  }
+
+  /**
    * Establish the entire SSH tunnel chain
    * Connects to each hop sequentially and calls lifecycle hooks
    */
@@ -69,8 +110,14 @@ export class SSHOrchestrator {
       throw new Error("No hops configured");
     }
 
+    // Pre-connect hook (e.g., start Pomerium)
+    if (this.config.onBeforeConnect) {
+      await this.config.onBeforeConnect();
+    }
+
     // First hop: direct connection
-    const firstTunnel = await this.connectDirect(this.config.hops[0]);
+    const firstHopResolved = this.resolveCredentials(this.config.hops[0]);
+    const firstTunnel = await this.connectDirect(firstHopResolved);
     this.tunnels.push(firstTunnel);
 
     if (this.config.onHopConnected) {
@@ -80,10 +127,8 @@ export class SSHOrchestrator {
     // Subsequent hops: tunnel through previous hop
     for (let i = 1; i < this.config.hops.length; i++) {
       const prevTunnel = this.tunnels[i - 1];
-      const nextTunnel = await this.connectThrough(
-        prevTunnel,
-        this.config.hops[i]
-      );
+      const hopResolved = this.resolveCredentials(this.config.hops[i]);
+      const nextTunnel = await this.connectThrough(prevTunnel, hopResolved);
       this.tunnels.push(nextTunnel);
 
       if (this.config.onHopConnected) {
@@ -96,7 +141,7 @@ export class SSHOrchestrator {
    * Direct SSH connection (for first hop)
    * @private
    */
-  private connectDirect(config: SSHConfig): Promise<Client> {
+  private connectDirect(config: ResolvedSSHConfig): Promise<Client> {
     return new Promise((resolve, reject) => {
       const tunnel = new Client();
 
@@ -135,7 +180,7 @@ export class SSHOrchestrator {
    */
   private connectThrough(
     parentTunnel: Client,
-    config: SSHConfig
+    config: ResolvedSSHConfig
   ): Promise<Client> {
     return new Promise((resolve, reject) => {
       parentTunnel.forwardOut(
@@ -178,17 +223,17 @@ export class SSHOrchestrator {
   }
 
   /**
-   * Build SSH connection configuration from hop config
+   * Build SSH connection configuration from resolved hop config
    * @private
    */
-  private buildConnectConfig(config: SSHConfig): ConnectConfig {
+  private buildConnectConfig(config: ResolvedSSHConfig): ConnectConfig {
     return {
       host: config.host,
       port: config.port,
       username: config.username,
       password: config.password,
       privateKey: config.privateKey,
-      readyTimeout: config.readyTimeout || 60000,
+      readyTimeout: config.readyTimeout,
     };
   }
 
@@ -438,7 +483,8 @@ export class SSHOrchestrator {
       throw new Error(`Tunnel for '${sourceHop}' not established`);
     }
 
-    const remoteTunnel = await this.connectThrough(parentTunnel, config);
+    const resolvedConfig = this.resolveCredentials(config);
+    const remoteTunnel = await this.connectThrough(parentTunnel, resolvedConfig);
     this.remotes.set(name, remoteTunnel);
   }
 
@@ -490,6 +536,11 @@ export class SSHOrchestrator {
    * Close all SSH connections
    */
   public async disconnect(): Promise<void> {
+    // Pre-disconnect hook (e.g., cleanup, stop Pomerium)
+    if (this.config.onBeforeDisconnect) {
+      await this.config.onBeforeDisconnect();
+    }
+
     // Close all remote connections
     for (const [name, tunnel] of this.remotes.entries()) {
       tunnel.end();

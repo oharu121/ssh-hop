@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { SSHOrchestrator } from "../../src/core/SSHOrchestrator";
-import type { OrchestratorConfig, SimplifiedConfig, SSHConfig } from "../../src/types";
+import type { OrchestratorConfig, SimplifiedConfig, SSHConfig, SSHDefaults } from "../../src/types";
 import { createMockLogger } from "../helpers/mocks";
 
 // Mock ssh2
@@ -360,6 +360,233 @@ describe("SSHOrchestrator", () => {
 
       // Hook will be called during connect(), not during construction
       expect(onHopConnected).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("v1.1 Features", () => {
+    describe("isConnected property", () => {
+      it("should return false when no tunnels are established", () => {
+        const config: OrchestratorConfig = {
+          hops: [
+            { name: "jump", host: "jump.com", port: 22, username: "user", password: "pass" },
+          ],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator.isConnected).toBe(false);
+      });
+
+      it("should return false when hops array is empty", () => {
+        const config: OrchestratorConfig = {
+          hops: [],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator.isConnected).toBe(false);
+      });
+
+      it("should have isConnected as a getter property", () => {
+        const config: OrchestratorConfig = {
+          hops: [{ name: "jump", host: "jump.com", username: "user" }],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toHaveProperty("isConnected");
+        expect(typeof orchestrator.isConnected).toBe("boolean");
+      });
+    });
+
+    describe("defaults config", () => {
+      it("should accept defaults in configuration", () => {
+        const defaults: SSHDefaults = {
+          username: "defaultUser",
+          password: "defaultPass",
+          port: 2222,
+          readyTimeout: 30000,
+        };
+
+        const config: OrchestratorConfig = {
+          defaults,
+          hops: [
+            { name: "jump", host: "jump.com" },
+            { name: "remote", host: "remote.com" },
+          ],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+      });
+
+      it("should work with partial defaults", () => {
+        const config: OrchestratorConfig = {
+          defaults: { username: "sharedUser" },
+          hops: [
+            { name: "jump", host: "jump.com", password: "jumpPass" },
+            { name: "remote", host: "remote.com", password: "remotePass" },
+          ],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+      });
+
+      it("should allow hop config to override defaults", () => {
+        const config: OrchestratorConfig = {
+          defaults: { username: "defaultUser", port: 2222 },
+          hops: [
+            { name: "jump", host: "jump.com", username: "jumpUser", port: 22 },
+          ],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+      });
+
+      it("should accept defaults with privateKey", () => {
+        const config: OrchestratorConfig = {
+          defaults: {
+            username: "user",
+            privateKey: "-----BEGIN RSA PRIVATE KEY-----\ntest\n-----END RSA PRIVATE KEY-----",
+          },
+          hops: [{ name: "jump", host: "jump.com" }],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+      });
+    });
+
+    describe("optional port", () => {
+      it("should accept hop without port specified", () => {
+        const config: OrchestratorConfig = {
+          hops: [
+            { name: "jump", host: "jump.com", username: "user", password: "pass" },
+          ],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+      });
+
+      it("should accept multiple hops without port specified", () => {
+        const config: OrchestratorConfig = {
+          hops: [
+            { name: "jump", host: "jump.com", username: "user", password: "pass" },
+            { name: "remote", host: "remote.com", username: "user", password: "pass" },
+          ],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+      });
+
+      it("should accept port from defaults when not specified in hop", () => {
+        const config: OrchestratorConfig = {
+          defaults: { port: 2222 },
+          hops: [
+            { name: "jump", host: "jump.com", username: "user", password: "pass" },
+          ],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+      });
+    });
+
+    describe("onBeforeConnect hook", () => {
+      it("should accept onBeforeConnect in configuration", () => {
+        const onBeforeConnect = vi.fn().mockResolvedValue(undefined);
+
+        const config: OrchestratorConfig = {
+          hops: [{ name: "jump", host: "jump.com", username: "user", password: "pass" }],
+          onBeforeConnect,
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+        // Hook is not called during construction
+        expect(onBeforeConnect).not.toHaveBeenCalled();
+      });
+
+      it("should not throw when onBeforeConnect is undefined", () => {
+        const config: OrchestratorConfig = {
+          hops: [{ name: "jump", host: "jump.com", username: "user", password: "pass" }],
+        };
+
+        expect(() => new SSHOrchestrator(config)).not.toThrow();
+      });
+    });
+
+    describe("onBeforeDisconnect hook", () => {
+      it("should accept onBeforeDisconnect in configuration", () => {
+        const onBeforeDisconnect = vi.fn().mockResolvedValue(undefined);
+
+        const config: OrchestratorConfig = {
+          hops: [{ name: "jump", host: "jump.com", username: "user", password: "pass" }],
+          onBeforeDisconnect,
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+        // Hook is not called during construction
+        expect(onBeforeDisconnect).not.toHaveBeenCalled();
+      });
+
+      it("should not throw when onBeforeDisconnect is undefined", async () => {
+        const config: OrchestratorConfig = {
+          hops: [{ name: "jump", host: "jump.com", username: "user", password: "pass" }],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        // disconnect should not throw even without hook
+        await orchestrator.disconnect();
+      });
+    });
+
+    describe("combined v1.1 configuration", () => {
+      it("should accept full v1.1 configuration with all features", () => {
+        const onBeforeConnect = vi.fn().mockResolvedValue(undefined);
+        const onBeforeDisconnect = vi.fn().mockResolvedValue(undefined);
+        const onHopConnected = vi.fn().mockResolvedValue(undefined);
+
+        const config: OrchestratorConfig = {
+          defaults: {
+            username: "sharedUser",
+            password: "sharedPass",
+            readyTimeout: 60000,
+          },
+          hops: [
+            { name: "jump", host: "127.0.0.1", port: 2222 },
+            { name: "remote", host: "10.0.1.100" },
+          ],
+          logger: createMockLogger(),
+          onBeforeConnect,
+          onHopConnected,
+          onBeforeDisconnect,
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+        expect(orchestrator.isConnected).toBe(false);
+      });
+
+      it("should work with minimal hop config when defaults are provided", () => {
+        const config: OrchestratorConfig = {
+          defaults: {
+            username: "user",
+            password: "pass",
+            port: 22,
+            readyTimeout: 60000,
+          },
+          hops: [
+            { name: "jump", host: "jump.com" },
+            { name: "remote", host: "remote.com" },
+          ],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+      });
     });
   });
 });

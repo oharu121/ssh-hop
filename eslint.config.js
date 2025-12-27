@@ -40,7 +40,10 @@ export default [
       ...prettierConfig.rules,
       // Relax rules for certain patterns
       '@typescript-eslint/no-explicit-any': 'off', // Allow any in tests
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-require-imports': 'off', // Allow require in examples
       '@typescript-eslint/no-unsafe-function-type': 'off', // Allow Function type in mocks
       'no-undef': 'off', // TypeScript handles this
@@ -51,4 +54,30 @@ export default [
     // Ignore built files and specific directories
     ignores: ['dist/**', 'node_modules/**', 'coverage/**', '.github/**'],
   },
+
+  // JavaScript/MJS files - Node.js scripts
+  {
+    files: ['**/*.js', '**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+      },
+    },
+    rules: {
+      'no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
+  // Prettier config (must be last to override other configs)
+  prettierConfig,
 ];
