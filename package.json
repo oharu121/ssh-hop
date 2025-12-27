@@ -1,6 +1,6 @@
 {
   "name": "ssh-hop",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A flexible, type-safe SSH orchestration library for multi-hop tunneling, remote command execution, and SFTP operations",
   "type": "module",
   "main": "./index.js",
