@@ -1,7 +1,7 @@
 /**
  * Usage example showing how to use the rewritten Remote class
  *
- * The API is nearly identical to the original bss-autopilot implementation,
+ * The API is nearly identical to the original  implementation,
  * making migration straightforward.
  */
 

@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Credential resolution** - Hop config overrides defaults, which override built-in defaults (port: 22, readyTimeout: 60000)
 
 ### Documentation
-- Added migration example for bss-autopilot use case
+- Added migration example for  use case
 - Added v2.0 roadmap in `.dev-notes/2025-12-28.md`
 
 ## [1.0.0]

@@ -1,7 +1,7 @@
 /**
  * Rewritten Remote.ts using ssh-hop v1.1
  *
- * This example shows how to migrate bss-autopilot/class/ssh/Remote.ts
+ * This example shows how to migrate /class/ssh/Remote.ts
  * from 469 lines of manual SSH management to ~80 lines using ssh-hop.
  *
  * v1.1 Features Used:
