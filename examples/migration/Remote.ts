@@ -23,7 +23,6 @@ import {
   PodFinder,
   consoleLogger,
 } from "ssh-hop";
-import type { PodInfo } from "ssh-hop";
 import type { EnvironmentConfig, Environment } from "./types";
 import { getConfig } from "./types";
 import type { ClientChannel } from "ssh2";

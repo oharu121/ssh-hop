@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { PodFinder } from "../../src/k8s/PodFinder";
-import type { PodInfo } from "../../src/k8s/types";
 
 describe("PodFinder", () => {
   let mockOrchestrator: any;

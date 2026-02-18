@@ -38,20 +38,17 @@ export class SSHKeyHelper {
 
     // Check if private key already exists
     let privateKey: string | undefined;
-    let keyExists = false;
 
     try {
       privateKey = fs.readFileSync(privateKeyPath, "utf8");
       logger.success("Found private key locally.");
-      keyExists = true;
     } catch {
       logger.warning("Private key not found.");
       logger.task("Generating new SSH key pair...");
-      keyExists = false;
     }
 
     // Generate new key pair if it doesn't exist
-    if (!keyExists) {
+    if (!privateKey) {
       try {
         await exec(
           `ssh-keygen -t rsa -b 4096 -f "${privateKeyPath}" -q -N ""`

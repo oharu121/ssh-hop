@@ -4,7 +4,8 @@
       "Bash(pnpm run build:*)",
       "Bash(pnpm run typecheck:*)",
       "Bash(find:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(pnpm run lint)"
     ],
     "deny": [],
     "ask": []
