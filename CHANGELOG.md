@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0]
+
+### Added
+- **`autoConnect` option** - Lazy connection on first exec call (opt-in via `autoConnect: true`)
+- **`PodFinder` class** - Native Kubernetes pod discovery via kubectl
+  - `searchPods(pattern)` - Find pods by name pattern
+  - `getRunningPods(pattern)` - Filter to Running status only
+  - `findFirstRunningPod(pattern)` - Get first running pod matching pattern
+  - `getPodIP(podName)` - Get pod IP via jsonpath
+  - `searchPodsWithIP(pattern)` - Search pods with IP populated
+  - `isPodRunning(podName)` - Check if pod exists and is running
+- **`PodInfo` type** - Interface for pod information (name, ready, status, restarts, age, ip)
+- **Kubernetes module** - New `src/k8s/` module with kubectl helpers
+
+### Changed
+- All exec methods (`exec`, `execJump`, `execRemote`) now support autoConnect
+- SFTP methods (`getSFTP`, `getJumpSFTP`, `getRemoteSFTP`) now support autoConnect
+- `openShell` now supports autoConnect
+
+### Documentation
+- Updated migration example with autoConnect and PodFinder usage
+- Added singleton pattern example for application-wide SSH instance
+
 ## [1.1.0]
 
 ### Added
@@ -20,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Credential resolution** - Hop config overrides defaults, which override built-in defaults (port: 22, readyTimeout: 60000)
 
 ### Documentation
-- Added migration example for  use case
+- Added migration example for bss-autopilot use case
 - Added v2.0 roadmap in `.dev-notes/2025-12-28.md`
 
 ## [1.0.0]
@@ -84,3 +107,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added comprehensive keywords for npm discoverability
 - Updated repository URLs to reflect new name
 - Added badges for version, license, types, downloads, CI status
+
+[Unreleased]: https://github.com/oharu121/ssh-hop/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/oharu121/ssh-hop/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/oharu121/ssh-hop/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/oharu121/ssh-hop/compare/v0.1.0...v1.0.0
+[0.1.0]: https://github.com/oharu121/ssh-hop/releases/tag/v0.1.0

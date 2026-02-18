@@ -29,11 +29,11 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,js,json,md}\"",
-    "test:all": "npm run typecheck && npm run lint && npm run test",
+    "test:all": "pnpm run typecheck && pnpm run lint && pnpm run test",
     "check:exports": "attw --pack",
-    "prepublishOnly": "npm run build",
-    "sync": "git pull --rebase && npm install && npm test",
-    "sync:quick": "git pull --rebase && npm install",
+    "prepublishOnly": "pnpm run build",
+    "sync": "git pull --rebase && pnpm install && pnpm test",
+    "sync:quick": "git pull --rebase && pnpm install",
     "release": "node scripts/release.mjs",
     "token": "node scripts/get-token.mjs"
   },
@@ -53,6 +53,7 @@
   ],
   "author": "oharu121 <jefflin1201@gmail.com> (https://github.com/oharu121)",
   "license": "MIT",
+  "packageManager": "pnpm@10.21.0",
   "engines": {
     "node": ">=22.0.0"
   },

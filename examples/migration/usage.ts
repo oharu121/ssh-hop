@@ -1,8 +1,13 @@
 /**
  * Usage example showing how to use the rewritten Remote class
  *
- * The API is nearly identical to the original  implementation,
+ * The API is nearly identical to the original implementation,
  * making migration straightforward.
+ *
+ * v1.2 Improvements:
+ * - No explicit connect() needed (autoConnect handles it)
+ * - PodFinder for native kubectl pod searching
+ * - Singleton pattern for use anywhere in your app
  */
 
 import { Remote } from "./Remote";
@@ -15,11 +20,12 @@ async function main() {
 
   console.log(`Connecting to ${env} environment...`);
 
-  const remote = new Remote(config);
+  // v1.2: Initialize singleton - connection happens lazily on first use
+  const remote = Remote.initialize(config);
 
   try {
-    // Connect through Pomerium → Jump → Remote
-    await remote.connect();
+    // v1.2: No connect() needed! autoConnect handles it on first exec
+    // await remote.connect();  // <-- Not required anymore!
 
     // --- Command Execution (same API as before) ---
 
@@ -30,6 +36,35 @@ async function main() {
     console.log("\n=== Node Info ===");
     const nodeInfo = await remote.execRemote("kubectl get nodes -o wide");
     console.log(nodeInfo);
+
+    // --- v1.2: Native Pod Discovery ---
+
+    console.log("\n=== Pod Discovery (v1.2 feature) ===");
+
+    // Find running utility pods
+    const utilityPods = await remote.pods.getRunningPods("utility");
+    console.log(
+      "Utility pods:",
+      utilityPods.map((p: { name: string }) => p.name)
+    );
+
+    // Find first running pod matching pattern
+    const kafkaPod = await remote.pods.findFirstRunningPod("kafka");
+    if (kafkaPod) {
+      console.log(`Found kafka pod: ${kafkaPod.name} (status: ${kafkaPod.status})`);
+
+      // Execute command in the pod
+      const kafkaVersion = await remote.execRemote(
+        `kubectl exec ${kafkaPod.name} -- kafka-topics.sh --version 2>/dev/null || echo 'version check failed'`
+      );
+      console.log("Kafka version:", kafkaVersion.trim());
+    }
+
+    // Get pods with IP addresses
+    const podsWithIP = await remote.pods.searchPodsWithIP("mysql");
+    for (const pod of podsWithIP) {
+      console.log(`Pod: ${pod.name}, IP: ${pod.ip}`);
+    }
 
     // --- SFTP Operations (same API as before) ---
 

@@ -588,5 +588,59 @@ describe("SSHOrchestrator", () => {
         expect(orchestrator).toBeDefined();
       });
     });
+
+    describe("autoConnect option (v1.2)", () => {
+      it("should accept autoConnect in configuration", () => {
+        const config: OrchestratorConfig = {
+          autoConnect: true,
+          hops: [{ name: "jump", host: "jump.com", username: "user", password: "pass" }],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+      });
+
+      it("should default autoConnect to false (opt-in)", () => {
+        const config: OrchestratorConfig = {
+          hops: [{ name: "jump", host: "jump.com", username: "user", password: "pass" }],
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        // Without autoConnect, exec should throw if not connected
+        expect(orchestrator.isConnected).toBe(false);
+      });
+
+      it("should accept autoConnect with all other v1.1 features", () => {
+        const onBeforeConnect = vi.fn().mockResolvedValue(undefined);
+
+        const config: OrchestratorConfig = {
+          autoConnect: true,
+          defaults: { username: "user", password: "pass" },
+          hops: [
+            { name: "jump", host: "127.0.0.1", port: 2222 },
+            { name: "remote", host: "10.0.1.100" },
+          ],
+          onBeforeConnect,
+        };
+
+        const orchestrator = new SSHOrchestrator(config);
+        expect(orchestrator).toBeDefined();
+        expect(orchestrator.isConnected).toBe(false);
+      });
+
+      it("should not call connect during construction even with autoConnect", () => {
+        const onBeforeConnect = vi.fn().mockResolvedValue(undefined);
+
+        const config: OrchestratorConfig = {
+          autoConnect: true,
+          hops: [{ name: "jump", host: "jump.com", username: "user", password: "pass" }],
+          onBeforeConnect,
+        };
+
+        new SSHOrchestrator(config);
+        // autoConnect only triggers on first exec, not during construction
+        expect(onBeforeConnect).not.toHaveBeenCalled();
+      });
+    });
   });
 });

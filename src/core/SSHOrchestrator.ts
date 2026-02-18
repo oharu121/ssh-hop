@@ -33,6 +33,7 @@ interface ResolvedSSHConfig {
  * - Automatic reconnection handling
  * - Lifecycle hooks for custom authentication (onBeforeConnect, onHopConnected, onBeforeDisconnect)
  * - Default credentials shared across hops
+ * - Auto-connect on first exec (opt-in via autoConnect: true)
  */
 export class SSHOrchestrator {
   private config: OrchestratorConfig;
@@ -46,6 +47,17 @@ export class SSHOrchestrator {
    */
   public get isConnected(): boolean {
     return this.tunnels.length === this.config.hops.length && this.config.hops.length > 0;
+  }
+
+  /**
+   * Ensure the orchestrator is connected (used by autoConnect)
+   * If already connected, this is a no-op
+   * @private
+   */
+  private async ensureConnected(): Promise<void> {
+    if (!this.isConnected) {
+      await this.connect();
+    }
   }
 
   constructor(config: OrchestratorConfig | SimplifiedConfig) {
@@ -270,6 +282,11 @@ export class SSHOrchestrator {
     cmd: string,
     debug: boolean = false
   ): Promise<string> {
+    // Auto-connect if enabled
+    if (this.config.autoConnect) {
+      await this.ensureConnected();
+    }
+
     const hopIndex = this.config.hops.findIndex((h) => h.name === hopName);
     if (hopIndex === -1) {
       throw new Error(`Hop '${hopName}' not found`);
@@ -294,6 +311,12 @@ export class SSHOrchestrator {
     if (this.config.hops.length === 0) {
       throw new Error("No hops configured");
     }
+
+    // Auto-connect if enabled
+    if (this.config.autoConnect) {
+      await this.ensureConnected();
+    }
+
     return this.exec(this.config.hops[0].name, cmd, debug);
   }
 
@@ -311,6 +334,12 @@ export class SSHOrchestrator {
     if (this.config.hops.length === 0) {
       throw new Error("No hops configured");
     }
+
+    // Auto-connect if enabled
+    if (this.config.autoConnect) {
+      await this.ensureConnected();
+    }
+
     const finalHop = this.config.hops[this.config.hops.length - 1];
     return this.exec(finalHop.name, cmd, debug);
   }
@@ -350,6 +379,11 @@ export class SSHOrchestrator {
    * @returns Promise resolving to shell stream
    */
   public async openShell(hopName?: string): Promise<ClientChannel> {
+    // Auto-connect if enabled
+    if (this.config.autoConnect) {
+      await this.ensureConnected();
+    }
+
     const targetHop =
       hopName || this.config.hops[this.config.hops.length - 1].name;
     const hopIndex = this.config.hops.findIndex((h) => h.name === targetHop);
@@ -410,6 +444,11 @@ export class SSHOrchestrator {
    * @returns Promise resolving to SFTP client
    */
   public async getSFTP(hopName?: string): Promise<SFTPClient> {
+    // Auto-connect if enabled
+    if (this.config.autoConnect) {
+      await this.ensureConnected();
+    }
+
     const targetHop =
       hopName || this.config.hops[this.config.hops.length - 1].name;
 
@@ -446,6 +485,12 @@ export class SSHOrchestrator {
     if (this.config.hops.length === 0) {
       throw new Error("No hops configured");
     }
+
+    // Auto-connect if enabled
+    if (this.config.autoConnect) {
+      await this.ensureConnected();
+    }
+
     return this.getSFTP(this.config.hops[0].name);
   }
 
@@ -456,6 +501,11 @@ export class SSHOrchestrator {
    * @returns Promise resolving to SFTP client
    */
   public async getRemoteSFTP(): Promise<SFTPClient> {
+    // Auto-connect if enabled
+    if (this.config.autoConnect) {
+      await this.ensureConnected();
+    }
+
     return this.getSFTP();
   }
 

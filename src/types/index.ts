@@ -45,6 +45,8 @@ export interface OrchestratorConfig {
   defaults?: SSHDefaults;
   /** Optional logger implementation (defaults to no-op) */
   logger?: LoggerInterface;
+  /** Automatically connect on first exec call (default: false) */
+  autoConnect?: boolean;
   /** Callback fired before the connection chain starts (e.g., start Pomerium) */
   onBeforeConnect?: () => Promise<void>;
   /** Callback fired after each hop is successfully connected */

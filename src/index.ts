@@ -3,6 +3,10 @@ export { SSHOrchestrator } from "./core/SSHOrchestrator";
 export { SFTPClient } from "./core/SFTPClient";
 export { CommandBuilder } from "./core/CommandBuilder";
 
+// Kubernetes module
+export { PodFinder } from "./k8s";
+export type { PodInfo } from "./k8s";
+
 // Utilities
 export { SSHKeyHelper } from "./utils/SSHKeyHelper";
 export { consoleLogger } from "./utils/ConsoleLogger";

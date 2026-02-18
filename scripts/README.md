@@ -7,7 +7,7 @@ Interactive release automation tool for `forge-npm-pkg`.
 ### Usage
 
 ```bash
-npm run release
+pnpm run release
 ```
 
 ### What it does
@@ -87,7 +87,7 @@ The script handles all common failure scenarios:
 
 **What happens when Dependabot merged while you have local changes:**
 
-1. You run `npm run release`
+1. You run `pnpm run release`
 2. Script detects remote is ahead:
    ```
    ⚠️  Remote has new commits
@@ -109,7 +109,7 @@ The script handles all common failure scenarios:
    │  Recovery steps:
    │    1. Stash your changes:  git stash
    │    2. Pull latest:         git pull --rebase
-   │    3. Install deps:        npm install
+   │    3. Install deps:        pnpm install
    │    4. Restore changes:     git stash pop
    │    5. Run release again
    └
@@ -129,7 +129,7 @@ This ensures you never accidentally create conflicts or push rejected commits!
 
 **What happens when you run release from a feature branch:**
 
-1. You run `npm run release` while on branch `feature/new-thing`
+1. You run `pnpm run release` while on branch `feature/new-thing`
 2. Script detects you're not on main/master:
    ```
    ⚠  You are on branch: feature/new-thing
@@ -160,10 +160,10 @@ This prevents accidental releases from the wrong branch, which could cause:
 If you prefer manual control:
 
 ```bash
-npm run sync              # Pull latest + install + test
-npm run test:all          # Verify everything passes
+pnpm run sync              # Pull latest + install + test
+pnpm run test:all          # Verify everything passes
 git add .
 git commit -m "feat: your message"
-npm version patch         # or minor, or major
+pnpm version patch         # or minor, or major
 git push && git push --tags
 ```

@@ -26,7 +26,7 @@ A flexible, type-safe SSH orchestration library for Node.js that simplifies mult
 ## Installation
 
 ```bash
-npm install ssh-hop
+pnpm add ssh-hop
 ```
 
 ## Quick Start
@@ -394,26 +394,26 @@ See the [examples/](./examples/) directory for complete working examples:
 ### Build
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 ### Test
 
 ```bash
-npm test
+pnpm test
 ```
 
 ### Lint
 
 ```bash
-npm run lint
-npm run format
+pnpm run lint
+pnpm run format
 ```
 
 ### Validate Package Exports
 
 ```bash
-npm run check:exports
+pnpm run check:exports
 ```
 
 ## Release Workflow
@@ -425,9 +425,9 @@ This package uses automated publishing via GitHub Actions.
 1. **Make your changes** and commit them
 2. **Update the version:**
    ```bash
-   npm version patch  # for bug fixes
-   npm version minor  # for new features
-   npm version major  # for breaking changes
+   pnpm version patch  # for bug fixes
+   pnpm version minor  # for new features
+   pnpm version major  # for breaking changes
    ```
 3. **Push the changes and tags:**
    ```bash
